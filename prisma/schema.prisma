@@ -79,6 +79,33 @@ model AuthorizedEmails {
   email String @unique
 }
 
+model Artist {
+  id         String   @id   @default(uuid())
+  name    String  
+  songs Song[]
+  total   Float
+
+}
+
+model Song {
+  id         Int   @id   @default(autoincrement())
+  artistId   String
+  artist Artist   @relation(fields: [artistId], references: [id],onDelete: Cascade)
+  total   Float
+  transactions  Transaction[]
+}
+
+
+
+model Transaction {
+   id         String   @id   @default(uuid())
+   songId    Int
+   song Song   @relation(fields: [songId], references: [id],onDelete: Cascade)
+   in Float
+   out  Float
+   purpose  String
+}
+
 enum Roles {
   member
   admin
