@@ -83,16 +83,20 @@ model Artist {
   id         String   @id   @default(uuid())
   name    String  
   songs Song[]
-  total   Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 
 }
 
 model Song {
   id         Int   @id   @default(autoincrement())
+  name  String
   artistId   String
+  status  Status  @default(To_Be_Released)
   artist Artist   @relation(fields: [artistId], references: [id],onDelete: Cascade)
-  total   Float
   transactions  Transaction[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 
@@ -104,9 +108,16 @@ model Transaction {
    in Float
    out  Float
    purpose  String
+   createdAt DateTime @default(now())
 }
 
 enum Roles {
   member
   admin
+}
+
+enum Status {
+  To_Be_Released @map("To be Released")
+  In_Process @map("In Process")
+  Released @map("Released")
 }
