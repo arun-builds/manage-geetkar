@@ -2,7 +2,6 @@ import SongBar from "@/components/SongBar";
 import { Button } from "@/components/ui/button";
 import {  prisma  } from "@/lib/database";
 import {Artist, Status, Song} from "@/generated/prisma"
-import { Plus } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -20,13 +19,12 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select"
-import { revalidatePath } from "next/cache";
+} from "@/components/ui/select";
 import { createSong } from "@/app/actions/createSong";
 
 export default async function ({ params }: { params: { artistId: string[] } }) {
-    const param = await params;
-    const artistId = param.artistId[0];
+    // const param =  params;
+    const artistId = params.artistId[0];
 
 
     type ArtistWithSongs = Artist & {
