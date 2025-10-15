@@ -3,7 +3,6 @@ import { prisma } from "@/lib/database"
 import Link from "next/link";
 export default async function Artists() {
     const artists = await prisma.artist.findMany();
-    console.log(artists);
 
     return (
         <div className=" flex flex-col">

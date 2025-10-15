@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Home, User, MessageSquare } from "lucide-react";
+import { Home, User, MessageSquare, Cog } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Appbar() {
@@ -19,18 +19,18 @@ export default function Appbar() {
             title: "Artists",
             href: "/artists",
             icon: User,
-        },
+        }, 
         {
-            title: "Finances",
-            href: "/finances",
-            icon: MessageSquare,
-        },
+            title: "Settings",
+            href: "/settings",
+            icon: Cog,
+        }, 
     ]
 
     return (
         <div className="w-full  p-2 flex items-center justify-center">
 
-            <nav className="flex items-center justify-center gap-10 ">
+            <nav className="flex items-center justify-center gap-6 ">
                 {navigationItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;

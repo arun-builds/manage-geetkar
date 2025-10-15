@@ -22,6 +22,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { revalidatePath } from "next/cache";
+import { createSong } from "@/app/actions/createSong";
 
 export default async function ({ params }: { params: { artistId: string[] } }) {
     const param = await params;
@@ -40,11 +41,14 @@ export default async function ({ params }: { params: { artistId: string[] } }) {
                 id: artistId
             },
             include: {
-                songs: true
+                songs: {
+                    orderBy: {
+                        createdAt: "desc"
+                    }
+                }
             }
         })
         artist = response as ArtistWithSongs | null
-        console.log(artist?.songs);
 
 
 
@@ -58,48 +62,15 @@ export default async function ({ params }: { params: { artistId: string[] } }) {
         )
     }
 
-    async function handleForm(e: FormData) {
-
-        // TODO: test authentication
-
-        'use server'
-        console.log(e);
-        const songname = e.get("song-name") as string;
-        const formStatus = e.get("status") as string;
-        const status = formStatus as Status
-        if(!songname && !status){
-            console.error("missing fields")
-            return;
-        }
-        if(!artist){
-            console.error("no user found");
-            return
-        }
-        console.log(songname, status);
-
-        console.log("triggered");
-        
-
-        try{
-            await prisma.song.create({
-                data: {
-                    name: songname,
-                    status,
-                    artistId: artistId
-                }
-            })
-            revalidatePath(`/artists/${artistId}`)
-        }catch(e){
-            console.error(e)
-        }
-    }
-
+   const addSongWithArtistId = createSong.bind(null, artistId) 
     return (
         <div>
             <div className="flex items-center justify-between w-full ">
                 <h1 className="text-3xl italic ">{artist.name}</h1>
+                <div className="flex">
+                <div className="flex  "><input className="p-1 px-3 border rounded-full rounded-r-none" type="text" placeholder="Search..." /></div>
                 <Dialog>
-                    <DialogTrigger className="flex items-center gap-2 p-1.5 px-6 bg-white text-black rounded-full" >New song
+                    <DialogTrigger className="flex items-center gap-2 p-1.5 px-6 bg-white text-black rounded-full rounded-l-none" >New song
                         {/* <Plus className="text-sm"/> */}
                     </DialogTrigger>
                     <DialogContent className="">
@@ -110,7 +81,7 @@ export default async function ({ params }: { params: { artistId: string[] } }) {
                                 and remove your data from our servers.
                             </DialogDescription> */}
                         </DialogHeader>
-                        <form action={handleForm} className="flex flex-col gap-2">
+                        <form action={addSongWithArtistId} className="flex flex-col gap-2">
                             <label htmlFor="song-name" >Song Name</label>
                             <Input name="song-name" />
                             <label htmlFor="">Status</label>
@@ -136,6 +107,7 @@ export default async function ({ params }: { params: { artistId: string[] } }) {
 
 
                 </Dialog>
+                </div>
 
             </div>
             <div className="w-full flex flex-col items-center gap-8 pt-12">

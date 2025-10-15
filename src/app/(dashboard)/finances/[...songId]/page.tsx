@@ -1,8 +1,8 @@
 import SongBar from "@/components/SongBar";
 import { Button } from "@/components/ui/button";
-import {  prisma } from "@/lib/database";
-import {Artist, Status, Song, Transaction} from "@/generated/prisma"
-import { Plus } from "lucide-react";
+import { prisma } from "@/lib/database";
+import { Artist, Status, Song, Transaction } from "@/generated/prisma"
+import { ArrowDownWideNarrow, ArrowUpRight, Plus, Trash2 } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -23,12 +23,14 @@ import {
 } from "@/components/ui/select"
 import { revalidatePath } from "next/cache";
 import TransactionBar from "@/components/TransactionBar";
+import Link from "next/link";
+import { createTransaction } from "@/app/actions/createTransaction";
 
 export default async function ({ params }: { params: { songId: string[] } }) {
     const param = await params;
-    const songId = parseInt(param.songId[0]) ;
+    const songId = parseInt(param.songId[0]);
     console.log(songId);
-    
+
 
 
     type SongWithTransactions = Song & {
@@ -36,6 +38,10 @@ export default async function ({ params }: { params: { songId: string[] } }) {
     }
 
     let songWithTransaction: SongWithTransactions | null = null;
+    let totalTransaction = {
+        "total": 0,
+        "color": ""
+    };
 
     try {
         const response = await prisma.song.findUnique({
@@ -43,14 +49,32 @@ export default async function ({ params }: { params: { songId: string[] } }) {
                 id: songId
             },
             include: {
-                transactions: true
-            }
+                transactions: {
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                },
+                
+            },
             
+        }
+    
+    )
+
+        songWithTransaction = response as SongWithTransactions | null;
+
+        const songTotal = await prisma.transaction.aggregate({
+            where: {
+                songId
+            },
+            _sum: {
+                in: true,
+                out: true
+            }
         })
 
-        songWithTransaction = response as SongWithTransactions | null
-        
-        console.log(songWithTransaction?.transactions);
+        totalTransaction.total = (songTotal._sum.in || 0) - (songTotal._sum.out || 0);
+        totalTransaction.color = (songTotal._sum.in || 0) > (songTotal._sum.out || 0) ? "text-green-400" : "text-red-400"
 
 
 
@@ -64,82 +88,72 @@ export default async function ({ params }: { params: { songId: string[] } }) {
         )
     }
 
-    async function handleForm(e: FormData) {
+    const addTransactionWithSongId = createTransaction.bind(null, songId);
 
-        // TODO: test authentication
-
-        'use server'
-        console.log(e);
-        const songname = e.get("song-name") as string;
-        const formStatus = e.get("status") as string;
-        const status = formStatus as Status
-        if(!songname && !status){
-            console.error("missing fields")
-            return;
-        }
-        if(!songId){
-            console.error("no user found");
-            return
-        }
-
-        console.log(songname, status);
-
-        console.log("triggered");
-        
-
-        }
     
+
 
     return (
         <div>
             <div className="flex items-center justify-between w-full ">
-                <h1 className="text-3xl italic ">{}</h1>
-                <Dialog>
-                    <DialogTrigger className="flex items-center gap-2 p-1.5 px-6 bg-white text-black rounded-full" >New Transaction
-                        {/* <Plus className="text-sm"/> */}
-                    </DialogTrigger>
-                    <DialogContent className="">
-                        <DialogHeader>
-                            <DialogTitle>Add a Song</DialogTitle>
-                            {/* <DialogDescription>
+                <div className="flex  items-end jus gap-10">
+                    <h1 className="text-4xl italic ">{songWithTransaction.name}</h1>
+                    <span className={`${totalTransaction.color} text-2xl text-end w-full`}>${totalTransaction.total}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                    <span className="flex"><ArrowDownWideNarrow /></span>
+                    <Link href={"export"} className="flex"><ArrowUpRight /></Link>
+                    <Dialog>
+                        <DialogTrigger className="flex items-center gap-1 p-1.5 px-6 bg-white text-black rounded-full" >Transaction
+                            <Plus className="text-sm font-extralight" size={16}/>
+                        </DialogTrigger>
+                        <DialogContent className="">
+                            <DialogHeader>
+                                <DialogTitle>Create a Transaction</DialogTitle>
+                                {/* <DialogDescription>
                                 This action cannot be undone. This will permanently delete your account
                                 and remove your data from our servers.
                             </DialogDescription> */}
-                        </DialogHeader>
-                        <form action={handleForm} className="flex flex-col gap-2">
-                            <label htmlFor="song-name" >Song Name</label>
-                            <Input name="song-name" />
-                            <label htmlFor="">Status</label>
-                            <Select name="status">
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value={Status.To_Be_Released}>To Be Released</SelectItem>
-                                    <SelectItem value={Status.In_Process}>In Process</SelectItem>
-                                    <SelectItem value={Status.Released}>Released</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <DialogFooter>
+                            </DialogHeader>
+                            <form action={addTransactionWithSongId} className="flex flex-col gap-2">
                                 
-                                <Button type="submit">
-                                    Add Song
-                                </Button>
-                            </DialogFooter>
-                        </form>
+                                
+                                <Select name="type">
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="in">In</SelectItem>
+                                        <SelectItem value="out">Out</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                    </DialogContent>
+                                <label htmlFor="amount" >Amount</label>
+                                <Input name="amount" type="number"/>
+                                <label htmlFor="purpose" >Purpose</label>
+                                <Input name="purpose" type="text"/>
+                                <DialogFooter>
+
+                                    <Button type="submit" className="mt-2">
+                                        Create
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+
+                        </DialogContent>
 
 
-                </Dialog>
-
+                    </Dialog>
+                    
+                </div>
             </div>
             <div className="w-full flex flex-col items-center gap-8 pt-12">
-                {/* {artist.songs.map((song) => (
-                    <div key={song.id} className="w-full"> */}
-                        <TransactionBar  />
-                    {/* </div>
-                ))} */}
+                {songWithTransaction.transactions.map((transaction) => (
+                    <div key={transaction.id} className="w-full">
+                        <TransactionBar transaction={transaction} />
+                        
+                    </div>
+                ))}
             </div>
         </div>
     );
