@@ -1,5 +1,5 @@
 "use client"
-import { deleteTransaction } from "@/app/actions/deleteTransaction";
+import { deleteTransaction } from "@/actions/deleteTransaction";
 import { Transaction } from "@/generated/prisma";
 import { TrendingUp, TrendingDown, Calendar, Tag, X } from "lucide-react";
 
@@ -9,7 +9,7 @@ export default function TransactionBar({ transaction }: { transaction: Transacti
     const isIncome = transaction.in != 0;
 
     function handleDelete(){
-        const deleteTransactionWithTransactionId = deleteTransaction(transaction.id, transaction.songId);
+        deleteTransaction(transaction.id, transaction.songId);
     }
 
     return (

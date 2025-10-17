@@ -1,8 +1,7 @@
-import SongBar from "@/components/SongBar";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/database";
-import { Artist, Status, Song, Transaction } from "@/generated/prisma"
-import { ArrowDownWideNarrow, ArrowUpRight, Plus, Trash2, Lock } from "lucide-react";
+import {  Song, Transaction } from "@/generated/prisma"
+import {  Plus, Lock } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -21,16 +20,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { revalidatePath } from "next/cache";
 import TransactionBar from "@/components/TransactionBar";
-import Link from "next/link";
-import { createTransaction } from "@/app/actions/createTransaction";
-import { checkRole } from "@/app/actions/checkRole";
+import { createTransaction } from "@/actions/createTransaction";
 
-export default async function ({ params }: { params: { songId: string[] } }) {
+export default async function FinancePage ({ params }: { params: { songId: string[] } }) {
     const param = await params;
     const songId = parseInt(param.songId[0]);
-    console.log(songId);
 
     // Check if user is admin
     // const userIsAdmin = await checkRole();
@@ -53,7 +48,7 @@ export default async function ({ params }: { params: { songId: string[] } }) {
     }
 
     let songWithTransaction: SongWithTransactions | null = null;
-    let totalTransaction = {
+    const totalTransaction = {
         "total": 0,
         "color": ""
     };

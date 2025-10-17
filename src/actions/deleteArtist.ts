@@ -17,7 +17,7 @@ export async function deleteArtist(artistId: string){
     if(!artistId) return;
 
     try {
-        const deletedArtist = await prisma.artist.delete({
+        await prisma.artist.delete({
             where: {
                 id: artistId,
             }

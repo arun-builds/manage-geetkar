@@ -1,9 +1,9 @@
 "use client"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { User, Trash2 } from "lucide-react";
-import { authClient, useSession } from "@/lib/auth-client";
+import {  useSession } from "@/lib/auth-client";
 import { Roles } from "@/generated/prisma";
-import { deleteUser } from "@/app/actions/deleteUser";
+import { deleteUser } from "@/actions/deleteUser";
 
 interface RequireUserFields {
     id: string;
@@ -16,7 +16,7 @@ interface RequireUserFields {
 
 export default function UserManagement({users}: {users: RequireUserFields[]}){
 
-    const { data, error, isPending } = useSession()
+    const { data } = useSession()
 
 
     

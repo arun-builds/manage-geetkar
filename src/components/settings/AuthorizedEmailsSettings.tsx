@@ -1,5 +1,4 @@
 "use client"
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Mail } from "lucide-react";
@@ -14,14 +13,13 @@ import {
 } from "@/components/ui/dialog";
 
 import { AuthorizedEmails } from "@/generated/prisma";
-import { addAuthorizedEmail } from "@/app/actions/addAuthorizedEmail";
-import { deleteAuthorizedEmail } from "@/app/actions/deleteAuthorizedEmail";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { addAuthorizedEmail } from "@/actions/addAuthorizedEmail";
+import { deleteAuthorizedEmail } from "@/actions/deleteAuthorizedEmail";
 import { useSession } from "@/lib/auth-client";
 
 export default function AuthorizedEmailsSettings({ initialEmails }: { initialEmails: AuthorizedEmails[] }) {
 
-    const { data, error, isPending } = useSession();
+    const { data } = useSession();
 
 
     

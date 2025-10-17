@@ -3,8 +3,7 @@ import { prisma } from "@/lib/database";
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, TrendingDown, DollarSign, Music, IndianRupee } from "lucide-react";
+import { TrendingUp, TrendingDown,  Music, IndianRupee } from "lucide-react";
 
 
 

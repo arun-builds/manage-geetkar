@@ -17,6 +17,7 @@ import { Loader2, X } from "lucide-react";
 import { signUp } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Roles } from "@/generated/prisma";
 
 export default function SignUp() {
 	const [firstName, setFirstName] = useState("");
@@ -155,6 +156,7 @@ export default function SignUp() {
 								password,
 								name: `${firstName} ${lastName}`,
 								image: image ? await convertImageToBase64(image) : "",
+								role:Roles.member,
 								callbackURL: "/dashboard",
 								fetchOptions: {
 									onResponse: () => {

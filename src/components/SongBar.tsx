@@ -2,9 +2,18 @@ import { Status } from "@/generated/prisma";
 import { CircleArrowOutUpRight, Lock, Music } from "lucide-react";
 import Link from "next/link";
 
+interface StatusDetail {
+    text: string;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+}
+
 export default function SongBar({ name, status, songId, isAdmin }: { name: string, status: Status, songId: number, isAdmin?: boolean }) {
 
-    const StatusMetadata: any = {
+    
+
+    const StatusMetadata: Record<Status, StatusDetail> = {
         [Status.To_Be_Released]: { 
             text: "To Be Released", 
             color: "text-red-400", 

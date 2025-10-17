@@ -4,7 +4,7 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
-export default function ProfileSettings({ user }: { user: any }) {
+export default function ProfileSettings({ name, email }: { name: string, email: string }) {
     const router = useRouter();
 
     const handleSignOut = async () => {
@@ -23,11 +23,11 @@ export default function ProfileSettings({ user }: { user: any }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label className="text-sm text-muted-foreground">Name</label>
-                    <p className="text-lg font-medium">{user.name}</p>
+                    <p className="text-lg font-medium">{name}</p>
                 </div>
                 <div>
                     <label className="text-sm text-muted-foreground">Email</label>
-                    <p className="text-lg font-medium">{user.email}</p>
+                    <p className="text-lg font-medium">{email}</p>
                 </div>
             </div>
 

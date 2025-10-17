@@ -1,12 +1,12 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/database";
-import { AuthorizedEmails, Roles, } from "@/generated/prisma";
+import { AuthorizedEmails } from "@/generated/prisma";
 import ProfileSettings from "@/components/settings/ProfileSettings";
 import AuthorizedEmailsSettings from "@/components/settings/AuthorizedEmailsSettings";
-import { User, Mail, Shield, Bell, Trash2 } from "lucide-react";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { User, Shield, } from "lucide-react";
 import UserManagement from "@/components/settings/UserManagement";
+import { checkRole } from "@/actions/checkRole";
 
 interface RequireUserFields {
     id: string;
@@ -20,11 +20,11 @@ export default async function SettingsPage() {
         headers: await headers(),
     });
 
-    if (!session) {
+    if (!session ) {
         return <div>Please sign in to access settings</div>;
     }
 
-    const isAdmin = session.user.role === Roles.admin;
+    const isAdmin = await checkRole();
 
 
     let authorizedEmails: AuthorizedEmails[] = [];
@@ -79,7 +79,7 @@ export default async function SettingsPage() {
                             <p className="text-xs md:text-sm text-muted-foreground">Manage your personal information</p>
                         </div>
                     </div>
-                    <ProfileSettings user={session.user} />
+                    <ProfileSettings name={session.user.name} email={session.user.email} />
                 </div>
 
                 {/* Role Badge */}

@@ -20,14 +20,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { createSong } from "@/app/actions/createSong";
-import { deleteArtist } from "@/app/actions/deleteArtist";
-import { updateArtist } from "@/app/actions/updateArtist";
-import { Search, Plus, Trash2, Edit, ArrowLeft } from "lucide-react";
+import { createSong } from "@/actions/createSong";
+import { deleteArtist } from "@/actions/deleteArtist";
+import { updateArtist } from "@/actions/updateArtist";
+import {  Plus, Trash2, Edit, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { checkRole } from "@/app/actions/checkRole";
+import { checkRole } from "@/actions/checkRole";
 
-export default async function ({ params }: { params: { artistId: string[] } }) {
+export default async function ArtistId ({ params }: { params: { artistId: string[] } }) {
     // const param =  params;
     const artistId = params.artistId[0];
     

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Home, Users, Cog, Music, Menu, X } from "lucide-react";
+import { Home, Users, Cog, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Appbar() {

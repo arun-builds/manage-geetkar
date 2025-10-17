@@ -13,7 +13,6 @@ export async function deleteTransaction(transactionId: string, songId: number){
 
     if(!session) return;
     
-    // Check if user is admin
     if(session.user.role !== Roles.admin) {
         console.error("Unauthorized: User is not an admin");
         return { error: "Unauthorized: Admin access required" };
@@ -22,7 +21,7 @@ export async function deleteTransaction(transactionId: string, songId: number){
     if(!transactionId) return;
 
     try {
-        const deleteTransaction = await prisma.transaction.delete({
+        await prisma.transaction.delete({
             where: {
                 id: transactionId,
             }

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createArtist } from "@/app/actions/createArtist";
+import { createArtist } from "@/actions/createArtist";
 
 export default async function Artists( ) {
     
