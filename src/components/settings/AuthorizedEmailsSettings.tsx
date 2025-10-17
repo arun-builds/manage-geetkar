@@ -13,48 +13,32 @@ import {
     DialogDescription
 } from "@/components/ui/dialog";
 
-interface AuthorizedEmail {
-    id: number;
-    email: string;
-}
+import { AuthorizedEmails } from "@/generated/prisma";
+import { addAuthorizedEmail } from "@/app/actions/addAuthorizedEmail";
+import { deleteAuthorizedEmail } from "@/app/actions/deleteAuthorizedEmail";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { useSession } from "@/lib/auth-client";
 
-export default function AuthorizedEmailsSettings({ initialEmails }: { initialEmails: AuthorizedEmail[] }) {
-    const [emails, setEmails] = useState<AuthorizedEmail[]>(initialEmails);
-    const [newEmail, setNewEmail] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
+export default function AuthorizedEmailsSettings({ initialEmails }: { initialEmails: AuthorizedEmails[] }) {
 
-    const addEmail = async () => {
-        if (!newEmail.trim() || !newEmail.includes('@')) return;
-        
-        setIsLoading(true);
-        try {
-            // Here you would call an API to add the email
-            // For now, we'll just add it to state
-            const mockId = Math.max(...emails.map(e => e.id), 0) + 1;
-            setEmails([{ id: mockId, email: newEmail }, ...emails]);
-            setNewEmail("");
-        } catch (error) {
-            console.error("Failed to add email:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const { data, error, isPending } = useSession();
 
-    const deleteEmail = async (id: number) => {
-        setIsLoading(true);
-        try {
-            // Here you would call an API to delete the email
-            setEmails(emails.filter(e => e.id !== id));
-        } catch (error) {
-            console.error("Failed to delete email:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+
+    
 
     return (
-        <div className="space-y-4">
-            {/* Add Email Dialog */}
+        <div className="bg-card border border-border rounded-lg p-4 md:p-6 shadow-sm space-y-4">
+             <div className="   flex justify-between items-center">
+                        <div className="flex items-center gap-2 md:gap-3">
+                            <div className="bg-primary/10 text-primary p-1.5 md:p-2 rounded-lg flex-shrink-0">
+                                <Mail size={20} className="md:w-6 md:h-6" />
+                            </div>
+                            <div className="min-w-0">
+                                <h2 className="text-lg md:text-2xl font-bold">Authorized Emails</h2>
+                                <p className="text-xs md:text-sm text-muted-foreground">Manage who can sign up</p>
+                            </div>
+                        </div>
+                        {/* Add Email Dialog */}
             <Dialog>
                 <DialogTrigger asChild>
                     <Button className="flex items-center gap-2">
@@ -69,32 +53,33 @@ export default function AuthorizedEmailsSettings({ initialEmails }: { initialEma
                             Add an email address that will be allowed to sign up for the platform.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex flex-col gap-4">
+                    <form action={addAuthorizedEmail} className="flex flex-col gap-4">
                         <Input
                             type="email"
                             placeholder="email@example.com"
-                            value={newEmail}
-                            onChange={(e) => setNewEmail(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && addEmail()}
+                            name="email"
                         />
                         <DialogFooter>
-                            <Button onClick={addEmail} disabled={isLoading || !newEmail.trim()}>
+                            <Button type="submit" >
                                 Add Email
                             </Button>
                         </DialogFooter>
-                    </div>
+                    </form>
                 </DialogContent>
             </Dialog>
+                        </div>
+        <div className="space-y-4">
+            
 
             {/* Emails List */}
             <div className="space-y-2 max-h-96 overflow-y-auto">
-                {emails.length === 0 ? (
+                {initialEmails.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                         <Mail size={48} className="mx-auto mb-2 opacity-50" />
                         <p>No authorized emails yet</p>
                     </div>
                 ) : (
-                    emails.map((email) => (
+                    initialEmails.map((email) => (
                         <div
                             key={email.id}
                             className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors group"
@@ -103,23 +88,34 @@ export default function AuthorizedEmailsSettings({ initialEmails }: { initialEma
                                 <Mail size={18} className="text-muted-foreground" />
                                 <span className="font-medium">{email.email}</span>
                             </div>
+                            {data?.user.email !== email.email ? 
+                            
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => deleteEmail(email.id)}
-                                disabled={isLoading}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => deleteAuthorizedEmail(email.email)}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                                <Trash2 size={18} />
+                            </Button>:
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-gray-400 cursor-not-allowed"
                             >
                                 <Trash2 size={18} />
                             </Button>
+}
+                            
                         </div>
                     ))
                 )}
             </div>
 
             <p className="text-sm text-muted-foreground">
-                Total: {emails.length} authorized {emails.length === 1 ? 'email' : 'emails'}
+                Total: {initialEmails.length} authorized {initialEmails.length === 1 ? 'email' : 'emails'}
             </p>
+        </div>
         </div>
     );
 }

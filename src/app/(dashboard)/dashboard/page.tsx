@@ -13,7 +13,7 @@ export default async function Dashboard() {
         headers: await headers(),
     });
 
-    // if(!session) return;
+    if(!session) return;
 
     
     const totalTransactions = await prisma.transaction.aggregate({

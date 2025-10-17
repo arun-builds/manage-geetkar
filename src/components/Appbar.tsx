@@ -32,9 +32,7 @@ export default function Appbar() {
             <div className="flex items-center justify-between p-3 md:p-4 max-w-7xl mx-auto">
                 {/* Logo/Brand */}
                 <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <div className="bg-gradient-to-br from-primary to-primary/60 p-2 rounded-lg">
-                        <Music size={20} className="md:w-6 md:h-6 text-primary-foreground" />
-                    </div>
+                    
                     <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                         <span className="hidden sm:inline">Manage Geetkar</span>
                         <span className="sm:hidden">Geetkar</span>
