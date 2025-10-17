@@ -2,11 +2,11 @@
 
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/database";
-import {Roles, Status} from "@/generated/prisma"
+import {Roles} from "@/generated/prisma"
 import { headers } from "next/headers"
 import { revalidatePath } from "next/cache";
 
-export async function createSong(artistId: string, formData: FormData){
+export async function updateArtist(artistId: string, formData: FormData){
     const session = await auth.api.getSession({
         headers: await headers(),
     });
@@ -14,20 +14,23 @@ export async function createSong(artistId: string, formData: FormData){
 
     if(session.user.role !== Roles.admin) return;
 
-     const songName = formData.get("song-name") as string;
-    const statusFromForm = formData.get("status") as string;
-    const status = statusFromForm as Status
+    const artistName = formData.get("artist-name") as string;
+
+    if(!artistName || !artistId) return;
 
     try {
-        const createSong = await prisma.song.create({
+        const updatedArtist = await prisma.artist.update({
+            where: {
+                id: artistId,
+            },
             data: {
-                name: songName,
-                status,
-                artistId
+                name: artistName,
             }
         });
+        revalidatePath('/artists')
         revalidatePath(`/artists/${artistId}`)
     } catch (error) {
         console.error(error);
     }
 }
+

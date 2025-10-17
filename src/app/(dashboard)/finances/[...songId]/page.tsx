@@ -2,7 +2,7 @@ import SongBar from "@/components/SongBar";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/database";
 import { Artist, Status, Song, Transaction } from "@/generated/prisma"
-import { ArrowDownWideNarrow, ArrowUpRight, Plus, Trash2 } from "lucide-react";
+import { ArrowDownWideNarrow, ArrowUpRight, Plus, Trash2, Lock } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -25,11 +25,26 @@ import { revalidatePath } from "next/cache";
 import TransactionBar from "@/components/TransactionBar";
 import Link from "next/link";
 import { createTransaction } from "@/app/actions/createTransaction";
+import { checkRole } from "@/app/actions/checkRole";
 
 export default async function ({ params }: { params: { songId: string[] } }) {
     const param = await params;
     const songId = parseInt(param.songId[0]);
     console.log(songId);
+
+    // Check if user is admin
+    // const userIsAdmin = await checkRole();
+    const userIsAdmin = true
+    
+    if (!userIsAdmin) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <Lock size={64} className="text-muted-foreground" />
+                <h1 className="text-2xl font-bold">Access Denied</h1>
+                <p className="text-muted-foreground">You need admin privileges to view financial information.</p>
+            </div>
+        );
+    }
 
 
 
@@ -94,67 +109,98 @@ export default async function ({ params }: { params: { songId: string[] } }) {
 
 
     return (
-        <div>
-            <div className="flex items-center justify-between w-full ">
-                <div className="flex  items-end jus gap-10">
-                    <h1 className="text-4xl italic ">{songWithTransaction.name}</h1>
-                    <span className={`${totalTransaction.color} text-2xl text-end w-full`}>${totalTransaction.total}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <span className="flex"><ArrowDownWideNarrow /></span>
-                    <Link href={"export"} className="flex"><ArrowUpRight /></Link>
-                    <Dialog>
-                        <DialogTrigger className="flex items-center gap-1 p-1.5 px-6 bg-white text-black rounded-full" >Transaction
-                            <Plus className="text-sm font-extralight" size={16}/>
-                        </DialogTrigger>
-                        <DialogContent className="">
-                            <DialogHeader>
-                                <DialogTitle>Create a Transaction</DialogTitle>
-                                {/* <DialogDescription>
-                                This action cannot be undone. This will permanently delete your account
-                                and remove your data from our servers.
-                            </DialogDescription> */}
-                            </DialogHeader>
-                            <form action={addTransactionWithSongId} className="flex flex-col gap-2">
+        <div className="space-y-8">
+            {/* Header Section */}
+            <div className=" rounded-xl md:p-4 shadow-sm">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                    {/* Song Info */}
+                    <div className="flex-1">
+                        <h1 className="text-4xl font-bold mb-2">{songWithTransaction.name}</h1>
+                        <div className="flex items-center gap-4">
+                            <span className="text-muted-foreground">Financial Overview</span>
+                            <div className={`${totalTransaction.color} text-3xl font-bold flex items-center gap-2`}>
                                 
-                                
-                                <Select name="type">
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="in">In</SelectItem>
-                                        <SelectItem value="out">Out</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                <label htmlFor="amount" >Amount</label>
-                                <Input name="amount" type="number"/>
-                                <label htmlFor="purpose" >Purpose</label>
-                                <Input name="purpose" type="text"/>
-                                <DialogFooter>
-
-                                    <Button type="submit" className="mt-2">
-                                        Create
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-
-                        </DialogContent>
-
-
-                    </Dialog>
-                    
-                </div>
-            </div>
-            <div className="w-full flex flex-col items-center gap-8 pt-12">
-                {songWithTransaction.transactions.map((transaction) => (
-                    <div key={transaction.id} className="w-full">
-                        <TransactionBar transaction={transaction} />
-                        
+                                ₹{Math.abs(totalTransaction.total).toFixed(2)}
+                            </div>
+                        </div>
                     </div>
-                ))}
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                        {/* <button className="p-2 px-4 border border-border rounded-lg hover:bg-accent transition-colors flex items-center gap-2">
+                            <ArrowDownWideNarrow size={18} />
+                            <span className="hidden sm:inline">Sort</span>
+                        </button> */}
+                        {/* <Link href={"export"} className="p-2 px-4 border border-border rounded-lg hover:bg-accent transition-colors flex items-center gap-2">
+                            <ArrowUpRight size={18} />
+                            <span className="hidden sm:inline">Export</span>
+                        </Link> */}
+                        
+                        {/* Create Transaction Dialog */}
+                        <Dialog>
+                            <DialogTrigger className="flex items-center gap-2 p-2 px-6 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity shadow-md">
+                                <Plus size={20} />
+                                New Transaction
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Create a Transaction</DialogTitle>
+                                    <DialogDescription>
+                                        Add income or expense for {songWithTransaction.name}
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <form action={addTransactionWithSongId} className="flex flex-col gap-4">
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="type" className="text-sm font-medium">Transaction Type</label>
+                                        <Select name="type">
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="in">Income</SelectItem>
+                                                <SelectItem value="out">Expense</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="amount" className="text-sm font-medium">Amount (₹)</label>
+                                        <Input name="amount" type="number" step="0.01" placeholder="0.00" required />
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="purpose" className="text-sm font-medium">Purpose</label>
+                                        <Input name="purpose" type="text" placeholder="e.g., Studio recording" required />
+                                    </div>
+
+                                    <DialogFooter>
+                                        <Button type="submit" className="w-full">
+                                            Create Transaction
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </div>
             </div>
+
+            {/* Transactions List */}
+            {songWithTransaction.transactions.length > 0 ? (
+                <div className="w-full flex flex-col items-center gap-6">
+                    <h2 className="text-2xl font-bold self-start">Transaction History</h2>
+                    {songWithTransaction.transactions.map((transaction) => (
+                        <div key={transaction.id} className="w-full">
+                            <TransactionBar transaction={transaction} />
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border border-dashed border-border rounded-xl">
+                    <p className="text-xl mb-2">No transactions yet</p>
+                    <p className="text-sm">Create your first transaction to start tracking finances</p>
+                </div>
+            )}
         </div>
     );
 }

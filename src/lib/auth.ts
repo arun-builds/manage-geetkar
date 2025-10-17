@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 
-import { prisma } from "@/lib/database";
+import {  prisma } from "@/lib/database";
 import { createAuthMiddleware, APIError } from 'better-auth/api';
 
 export const auth = betterAuth({
@@ -25,6 +25,14 @@ export const auth = betterAuth({
             }
         }),
     },
+    user: {
+        additionalFields: {
+            role: {
+                type: "string",
+                required: false
+            }
+        }
+    }
 });
 
 async function checkEmail(email: string) {

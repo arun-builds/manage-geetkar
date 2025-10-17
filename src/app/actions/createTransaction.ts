@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/database";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers"
+import { Roles } from "@/generated/prisma";
 
 export async function createTransaction(songId: number, formData: FormData){
 
@@ -11,6 +12,9 @@ export async function createTransaction(songId: number, formData: FormData){
     });
 
     if(!session) return;
+    
+    
+    if(session.user.role !== Roles.admin) return;
 
     const transactionType = formData.get("type") as string;
     const formAmount = formData.get("amount") as string;
