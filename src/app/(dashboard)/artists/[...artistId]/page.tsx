@@ -28,8 +28,8 @@ import Link from "next/link";
 import { checkRole } from "@/actions/checkRole";
 
 export default async function ArtistId ({ params }: { params: { artistId: string[] } }) {
-    // const param =  params;
-    const artistId = params.artistId[0];
+    const param =  await params;
+    const artistId = param.artistId[0];
     
     // Check if user is admin
     const userIsAdmin = await checkRole();
