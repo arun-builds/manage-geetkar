@@ -27,9 +27,8 @@ import {  Plus, Trash2, Edit, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { checkRole } from "@/actions/checkRole";
 
-export default async function ArtistId ({ params }: { params: { artistId: string[] } }) {
-    const param =  await params;
-    const artistId = param.artistId[0];
+export default async function ArtistId ({params}: {params: Promise<{ artistId: string }>}) {
+    const {artistId} =  await params;
     
     // Check if user is admin
     const userIsAdmin = await checkRole();

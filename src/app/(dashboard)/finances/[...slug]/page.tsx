@@ -22,14 +22,16 @@ import {
 } from "@/components/ui/select"
 import TransactionBar from "@/components/TransactionBar";
 import { createTransaction } from "@/actions/createTransaction";
+import { checkRole } from "@/actions/checkRole";
 
-export default async function FinancePage ({ params }: { params: { songId: string[] } }) {
-    const param = await params;
-    const songId = parseInt(param.songId[0]);
+export default async function FinancePage ({params}: {params: Promise<{ slug: string }>}) {
 
-    // Check if user is admin
-    // const userIsAdmin = await checkRole();
-    const userIsAdmin = true
+    const {slug} = await params;
+    const songId = parseInt(slug);
+
+    
+    const userIsAdmin = await checkRole();
+    
     
     if (!userIsAdmin) {
         return (
