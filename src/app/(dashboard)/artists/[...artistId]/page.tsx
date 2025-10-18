@@ -1,7 +1,7 @@
 import SongBar from "@/components/SongBar";
 import { Button } from "@/components/ui/button";
 import {  prisma  } from "@/lib/database";
-import {Artist, Status, Song} from "@/generated/prisma"
+import {Artist, Status, Song, Roles} from "@/generated/prisma"
 import {
     Dialog,
     DialogContent,
@@ -26,13 +26,23 @@ import { updateArtist } from "@/actions/updateArtist";
 import {  Plus, Trash2, Edit, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { checkRole } from "@/actions/checkRole";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
-export default async function ArtistId ({params}: {params: Promise<{ artistId: string }>}) {
+export default async function ArtistId ({params}: {params: Promise<{ artistId: string[] }>}) {
     const {artistId} =  await params;
-    
-    // Check if user is admin
-    const userIsAdmin = await checkRole();
 
+    console.log(typeof artistId);
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if(!session) return(<div>Unauthorized</div>);
+
+
+    // Check if user is admin
+    const userIsAdmin = session.user.role === Roles.admin ? true : false;
+    
 
     type ArtistWithSongs = Artist & {
         songs: Song[]
@@ -43,7 +53,7 @@ export default async function ArtistId ({params}: {params: Promise<{ artistId: s
     try {
         const response = await prisma.artist.findUnique({
             where: {
-                id: artistId
+                id: artistId[0],
             },
             include: {
                 songs: {
@@ -54,23 +64,18 @@ export default async function ArtistId ({params}: {params: Promise<{ artistId: s
             }
         })
         artist = response as ArtistWithSongs | null
-
-
-
     } catch (e) {
-
         console.error(e);
     }
-    if (!artist) {
-        return (
-            <div>Artist Not Found</div>
-        )
-    }
-
-    //TODO: Error handling with forms
-   const addSongWithArtistId = createSong.bind(null, artistId);
-   const deleteArtistWithId = deleteArtist.bind(null, artistId);
-   const updateArtistWithId = updateArtist.bind(null, artistId);
+    
+    // Bind actions early as they only need artistId, which is guaranteed to exist.
+    const addSongWithArtistId = createSong.bind(null, artistId[0]);
+    const deleteArtistWithId = deleteArtist.bind(null, artistId[0]);
+    const updateArtistWithId = updateArtist.bind(null, artistId[0]);
+    
+    // -------------------------------------------------------------
+    // START OF MODIFIED RETURN STRUCTURE
+    // -------------------------------------------------------------
     
     return (
         <div className="flex flex-col gap-6">
@@ -80,87 +85,83 @@ export default async function ArtistId ({params}: {params: Promise<{ artistId: s
                 <span>Back to Artists</span>
             </Link>
 
-            {/* Header with artist info and actions */}
+            {/* Header with artist info and actions (ALWAYS RENDER) */}
             <div className="flex items-center justify-between w-full flex-wrap gap-4">
+                {/* 1. Artist Name/Info Section */}
                 <div className="flex items-center gap-4">
-                    <h1 className="text-4xl font-bold">{artist.name}</h1>
-                    <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                        {artist.songs.length} {artist.songs.length === 1 ? 'song' : 'songs'}
-                    </span>
+                    {artist ? (
+                        <>
+                            <h1 className="text-4xl font-bold">{artist.name}</h1>
+                            <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                                {artist.songs.length} {artist.songs.length === 1 ? 'song' : 'songs'}
+                            </span>
+                        </>
+                    ) : (
+                        // Display status if artist is not found
+                        <h1 className="text-4xl font-bold text-destructive">Songs Not Found for this Artist</h1>
+                    )}
                 </div>
                 
+                {/* 2. Action Buttons (Dialogs) Section */}
                 <div className="flex gap-3 items-center">
-                    {/* Edit Artist Dialog */}
-                    <Dialog>
-                        <DialogTrigger className="flex items-center gap-2 p-2 px-4 border border-border rounded-full hover:bg-accent transition-colors">
-                            <Edit size={16} />
-                            Edit
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Edit Artist</DialogTitle>
-                            </DialogHeader>
-                            <form action={updateArtistWithId} className="flex flex-col gap-4">
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="artist-name" className="text-sm font-medium">Artist Name</label>
-                                    <Input 
-                                        name="artist-name" 
-                                        id="artist-name"
-                                        defaultValue={artist.name}
-                                        required
-                                    />
-                                </div>
-                                <DialogFooter>
-                                    <Button type="submit" className="w-full">
-                                        Update Artist
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                    
+                    {/* EDIT ARTIST DIALOG (ONLY RENDER IF ARTIST EXISTS) */}
+                    {artist && (
+                        <Dialog>
+                            <DialogTrigger className="flex items-center gap-2 p-2 px-4 border border-border rounded-full hover:bg-accent transition-colors">
+                                <Edit size={16} />
+                                Edit
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader><DialogTitle>Edit Artist</DialogTitle></DialogHeader>
+                                <form action={updateArtistWithId} className="flex flex-col gap-4">
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="artist-name" className="text-sm font-medium">Artist Name</label>
+                                        <Input name="artist-name" id="artist-name" defaultValue={artist.name} required />
+                                    </div>
+                                    <DialogFooter>
+                                        <Button type="submit" className="w-full">Update Artist</Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    )}
 
-                    {/* Delete Artist Dialog */}
-                    <Dialog>
-                        <DialogTrigger className="flex items-center gap-2 p-2 px-4 bg-destructive/10 text-destructive rounded-full hover:bg-destructive/20 transition-colors">
-                            <Trash2 size={16} />
-                            Delete
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Delete Artist</DialogTitle>
-                                <DialogDescription>
-                                    Are you sure you want to delete {artist.name}? This will also delete all associated songs and transactions. This action cannot be undone.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <form action={deleteArtistWithId}>
-                                <DialogFooter>
-                                    <Button type="submit" variant="destructive" className="w-full">
-                                        Delete Artist
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                    {/* DELETE ARTIST DIALOG (ONLY RENDER IF ARTIST EXISTS) */}
+                    {artist && (
+                        <Dialog>
+                            <DialogTrigger className="flex items-center gap-2 p-2 px-4 bg-destructive/10 text-destructive rounded-full hover:bg-destructive/20 transition-colors">
+                                <Trash2 size={16} />
+                                Delete
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Delete Artist</DialogTitle>
+                                    <DialogDescription>
+                                        Are you sure you want to delete {artist.name}? This will also delete all associated songs and transactions. This action cannot be undone.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <form action={deleteArtistWithId}>
+                                    <DialogFooter>
+                                        <Button type="submit" variant="destructive" className="w-full">Delete Artist</Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    )}
 
-                    {/* Add Song Dialog */}
+                    {/* ADD SONG DIALOG (ALWAYS RENDER) */}
                     <Dialog>
                         <DialogTrigger className="flex items-center gap-2 p-2 px-6 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-opacity">
                             <Plus size={20} />
                             New Song
                         </DialogTrigger>
                         <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Add a Song</DialogTitle>
-                            </DialogHeader>
+                            <DialogHeader><DialogTitle>Add a Song</DialogTitle></DialogHeader>
                             <form action={addSongWithArtistId} className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-2">
                                     <label htmlFor="song-name" className="text-sm font-medium">Song Name</label>
-                                    <Input 
-                                        name="song-name" 
-                                        id="song-name"
-                                        placeholder="Enter song name"
-                                        required
-                                    />
+                                    <Input name="song-name" id="song-name" placeholder="Enter song name" required />
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <label htmlFor="status" className="text-sm font-medium">Status</label>
@@ -176,9 +177,7 @@ export default async function ArtistId ({params}: {params: Promise<{ artistId: s
                                     </Select>
                                 </div>
                                 <DialogFooter>
-                                    <Button type="submit" className="w-full">
-                                        Add Song
-                                    </Button>
+                                    <Button type="submit" className="w-full">Add Song</Button>
                                 </DialogFooter>
                             </form>
                         </DialogContent>
@@ -186,19 +185,26 @@ export default async function ArtistId ({params}: {params: Promise<{ artistId: s
                 </div>
             </div>
 
-            {/* Songs List */}
-            {artist.songs.length > 0 ? (
-                <div className="w-full flex flex-col items-center gap-6 pt-6">
-                    {artist.songs.map((song) => (
-                        <div key={song.id} className="w-full">
-                            <SongBar name={song.name} status={song.status} songId={song.id} isAdmin={userIsAdmin} />
-                        </div>
-                    ))}
-                </div>
+            {/* Songs List / Not Found Message */}
+            {artist ? (
+                artist.songs.length > 0 ? (
+                    <div className="w-full flex flex-col items-center gap-6 pt-6">
+                        {artist.songs.map((song) => (
+                            <div key={song.id} className="w-full">
+                                <SongBar name={song.name} status={song.status} songId={song.id} isAdmin={userIsAdmin} />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                        <p className="text-xl">No songs yet</p>
+                        <p className="text-sm mt-2">Add your first song to get started</p>
+                    </div>
+                )
             ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-                    <p className="text-xl">No songs yet</p>
-                    <p className="text-sm mt-2">Add your first song to get started</p>
+                    <p className="text-xl text-destructive">Could not load artist data.</p>
+                    <p className="text-sm mt-2">Check the Artist ID or database connection.</p>
                 </div>
             )}
         </div>
